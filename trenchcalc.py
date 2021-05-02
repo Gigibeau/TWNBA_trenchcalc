@@ -51,11 +51,20 @@ abline_values_x = [slope_x * i + intercept_x for i in tilt_corr_data.index]
 slope_y, intercept_y = np.polyfit(tilt_corr_data.columns, mean_y, 1)
 abline_values_y = [slope_y * i + intercept_y for i in tilt_corr_data.columns]
 
-lext_data_corr = lext_data.copy()
+x_map = []
+for index in lext_data.index:
+    x_map.append(slope_x * index)
 
-for x in lext_data_corr.index:
-    for y in lext_data_corr.columns:
-        lext_data_corr.loc[x, y] = lext_data_corr.loc[x, y] - (slope_x * x) - (slope_y * y)
+y_map = []
+for column in lext_data.columns:
+    y_map.append(slope_y * column)
+
+lext_data_corr = lext_data.copy()
+#lext_data_corr = lext_data_corr.sub(y_map, axis=1)
+#lext_data_corr = lext_data_corr.sub(x_map, axis=0)
+
+mean_x_corr = lext_data_corr.mean(axis=1)
+mean_y_corr = lext_data_corr.mean(axis=0)
 
 # Plotting the effect of the tilt correction
 corrected_x = []
@@ -76,12 +85,31 @@ mean_y_2 = tilt_corr_data.mean(axis=0)
 fig, ax = plt.subplots(1, 2, figsize=(10, 8))
 sns.lineplot(x=tilt_corr_data.index, y=mean_x, ax=ax[0])
 sns.lineplot(x=tilt_corr_data.index, y=abline_values_x, ax=ax[0])
-sns.lineplot(x=tilt_corr_data.index, y=corrected_x, ax=ax[0])
+sns.lineplot(x=lext_data_corr.index, y=mean_x_corr, ax=ax[0])
 
 sns.lineplot(x=tilt_corr_data.columns, y=mean_y, ax=ax[1])
 sns.lineplot(x=tilt_corr_data.columns, y=abline_values_y, ax=ax[1])
-sns.lineplot(x=tilt_corr_data.columns, y=corrected_y, ax=ax[1])
+sns.lineplot(x=lext_data_corr.columns, y=mean_y_corr, ax=ax[1])
 
 plt.show()
 
+X, Y = np.meshgrid(lext_data_corr.columns, lext_data_corr.index)
+Z = lext_data_corr
 
+fig1 = plt.figure()
+ax1 = fig1.add_subplot(1, 1, 1, projection='3d')
+ax1.plot_surface(X, Y, Z, cmap=cm.viridis, rstride=5, cstride=5, linewidth=0)
+ax1.azim = 90
+ax1.elev = 5
+plt.show()
+
+
+X_2, Y_2 = np.meshgrid(lext_data.columns, lext_data.index)
+Z_2 = lext_data
+
+fig2 = plt.figure()
+ax2 = fig2.add_subplot(1, 1, 1, projection='3d')
+ax2.plot_surface(X_2, Y_2, Z_2, cmap=cm.viridis, rstride=5, cstride=5, linewidth=0)
+ax2.azim = 90
+ax2.elev = 5
+plt.show()
