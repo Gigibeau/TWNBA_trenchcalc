@@ -25,8 +25,10 @@ class Data:
         self.max_upper = self.lext_data.to_numpy().max()
         self.min_lower = self.lext_data.to_numpy().min()
         self.abs_range = self.max_upper - self.min_lower
-        self.max_lower = self.max_upper - (self.abs_range / 10)
-        self.min_upper = self.min_lower + (self.abs_range / 10)
+        self.avg_level = 10
+        self.corner_level = 0.98
+        self.max_lower = self.max_upper - (self.abs_range / self.avg_level)
+        self.min_upper = self.min_lower + (self.abs_range / self.avg_level)
         self.max_avg = self.lext_data[(self.mean > self.max_lower)].mean().mean()
 
     def tilt_correction(self):
@@ -86,8 +88,8 @@ class Data:
 
     def measure(self):
         # Measuring the trench
-        right_corner = (self.mean.loc[self.mean.idxmin():] > (self.max_avg * 0.98)).idxmax()
-        left_corner = (self.mean.iloc[::-1].loc[self.mean.idxmin():] > (self.max_avg * 0.98)).idxmax()
+        right_corner = (self.mean.loc[self.mean.idxmin():] > (self.max_avg * self.corner_level)).idxmax()
+        left_corner = (self.mean.iloc[::-1].loc[self.mean.idxmin():] > (self.max_avg * self.corner_level)).idxmax()
 
         fig = plt.figure()
         ax = fig.add_subplot(1, 1, 1)
@@ -98,7 +100,7 @@ class Data:
         plt.axvline(x=left_corner, color='red', alpha=0.5)
         plt.savefig(self.file_name)
         plt.show()
-        height = (self.max_avg * 0.98) - self.mean.min()
+        height = (self.max_avg * self.corner_level) - self.mean.min()
         width = right_corner - left_corner
 
         return height, width
