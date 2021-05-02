@@ -18,12 +18,15 @@ class Data:
         for column in self.lext_data.columns:
             self.lext_data.rename(columns={column: self.resolution[column - 1]}, inplace=True)
 
+        self.mean = self.lext_data.mean(axis=1)
+
         # Defining the limits
         self.max_upper = self.lext_data.to_numpy().max()
         self.min_lower = self.lext_data.to_numpy().min()
         self.abs_range = self.max_upper - self.min_lower
         self.max_lower = self.max_upper - (self.abs_range / 10)
         self.min_upper = self.min_lower + (self.abs_range / 10)
+        self.max_avg = self.lext_data[(self.mean > self.max_lower)].mean().mean()
 
     def tilt_correction(self):
         # Correcting the tilt
@@ -65,6 +68,8 @@ class Data:
         plt.show()
 
         self.lext_data = lext_data_corr
+        self.mean = mean_x_corr
+        self.max_avg = self.lext_data[(self.mean > self.max_lower)].mean().mean()
 
     def plot_3d(self):
         # Plotting 3D Plot
@@ -76,3 +81,18 @@ class Data:
         ax.plot_surface(x, y, z, cmap=cm.viridis, rstride=5, cstride=5, linewidth=0)
         ax.azim = 90
         plt.show()
+
+    def measure(self):
+        # Measuring the trench
+        self.right_corner = (self.mean.loc[self.mean.idxmin():] > (self.max_avg * 0.98)).idxmax()
+        self.left_corner = (self.mean.iloc[::-1].loc[self.mean.idxmin():] > (self.max_avg * 0.98)).idxmax()
+
+        fig = plt.figure()
+        ax = fig.add_subplot(1, 1, 1)
+        sns.lineplot(x=self.lext_data.index, y=self.mean, ax=ax)
+        plt.axhline(y=self.mean.min(), color='red', alpha=0.5)
+        plt.axhline(y=self.max_avg, color='red', alpha=0.5)
+        plt.axvline(x=self.right_corner, color='red', alpha=0.5)
+        plt.axvline(x=self.left_corner, color='red', alpha=0.5)
+        plt.show()
+
