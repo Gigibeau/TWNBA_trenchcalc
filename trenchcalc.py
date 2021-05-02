@@ -8,6 +8,7 @@ from matplotlib import cm
 class Data:
     def __init__(self, file_name):
         # Loading in the csv file and cleaning it up
+        self.file_name = file_name.split('.')[0]
         self.lext_data = pd.read_csv(file_name, error_bad_lines=False, skiprows=18)
         self.lext_data.drop(self.lext_data.columns[-1], inplace=True, axis=1)
         self.resolution = self.lext_data['DataLine']
@@ -34,7 +35,7 @@ class Data:
         mean_x = tilt_corr_data.mean(axis=1)
         mean_y = tilt_corr_data.mean(axis=0)
 
-        print(tilt_corr_data.std().mean())
+        # print(tilt_corr_data.std().mean())
 
         slope_x, intercept_x = np.polyfit(tilt_corr_data.index, mean_x, 1)
         abline_values_x = [slope_x * i + intercept_x for i in tilt_corr_data.index]
@@ -54,7 +55,7 @@ class Data:
         lext_data_corr = lext_data_corr.sub(y_map, axis=1)
         lext_data_corr = lext_data_corr.sub(x_map, axis=0)
 
-        print(lext_data_corr[(lext_data_corr.mean(axis=1) > self.max_lower)].std().mean())
+        # print(lext_data_corr[(lext_data_corr.mean(axis=1) > self.max_lower)].std().mean())
 
         mean_x_corr = lext_data_corr.mean(axis=1)
         # mean_y_corr = lext_data_corr.mean(axis=0)
@@ -80,19 +81,24 @@ class Data:
         ax = fig.add_subplot(1, 1, 1, projection='3d')
         ax.plot_surface(x, y, z, cmap=cm.viridis, rstride=5, cstride=5, linewidth=0)
         ax.azim = 90
+        plt.savefig(self.file_name + '_3D')
         plt.show()
 
     def measure(self):
         # Measuring the trench
-        self.right_corner = (self.mean.loc[self.mean.idxmin():] > (self.max_avg * 0.98)).idxmax()
-        self.left_corner = (self.mean.iloc[::-1].loc[self.mean.idxmin():] > (self.max_avg * 0.98)).idxmax()
+        right_corner = (self.mean.loc[self.mean.idxmin():] > (self.max_avg * 0.98)).idxmax()
+        left_corner = (self.mean.iloc[::-1].loc[self.mean.idxmin():] > (self.max_avg * 0.98)).idxmax()
 
         fig = plt.figure()
         ax = fig.add_subplot(1, 1, 1)
         sns.lineplot(x=self.lext_data.index, y=self.mean, ax=ax)
         plt.axhline(y=self.mean.min(), color='red', alpha=0.5)
         plt.axhline(y=self.max_avg, color='red', alpha=0.5)
-        plt.axvline(x=self.right_corner, color='red', alpha=0.5)
-        plt.axvline(x=self.left_corner, color='red', alpha=0.5)
+        plt.axvline(x=right_corner, color='red', alpha=0.5)
+        plt.axvline(x=left_corner, color='red', alpha=0.5)
+        plt.savefig(self.file_name)
         plt.show()
+        height = (self.max_avg * 0.98) - self.mean.min()
+        width = right_corner - left_corner
 
+        return height, width
