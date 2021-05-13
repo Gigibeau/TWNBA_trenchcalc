@@ -6,7 +6,7 @@ from matplotlib import cm
 
 
 class Data:
-    def __init__(self, file_name):
+    def __init__(self, file_name, avg_level, corner_level):
         # Loading in the csv file and cleaning it up
         self.file_name = file_name.split('.')[0]
         self.lext_data = pd.read_csv(file_name, error_bad_lines=False, skiprows=18)
@@ -25,11 +25,17 @@ class Data:
         self.max_upper = self.lext_data.to_numpy().max()
         self.min_lower = self.lext_data.to_numpy().min()
         self.abs_range = self.max_upper - self.min_lower
-        self.avg_level = 10
-        self.corner_level = 0.98
+        self.avg_level = avg_level
+        self.corner_level = corner_level
         self.max_lower = self.max_upper - (self.abs_range / self.avg_level)
         self.min_upper = self.min_lower + (self.abs_range / self.avg_level)
         self.max_avg = self.lext_data[(self.mean > self.max_lower)].mean().mean()
+
+        # Defining output data
+        self.height = 0
+        self.width = 0
+        self.chunks_heights = []
+        self.chunks_widths = []
 
     def tilt_correction(self):
         # Correcting the tilt
@@ -37,13 +43,9 @@ class Data:
         mean_x = tilt_corr_data.mean(axis=1)
         mean_y = tilt_corr_data.mean(axis=0)
 
-        # print(tilt_corr_data.std().mean())
-
         slope_x, intercept_x = np.polyfit(tilt_corr_data.index, mean_x, 1)
         abline_values_x = [slope_x * i + intercept_x for i in tilt_corr_data.index]
-
         slope_y, intercept_y = np.polyfit(tilt_corr_data.columns, mean_y, 1)
-        # abline_values_y = [slope_y * i + intercept_y for i in tilt_corr_data.columns]
 
         x_map = []
         for index in self.lext_data.index:
@@ -57,10 +59,7 @@ class Data:
         lext_data_corr = lext_data_corr.sub(y_map, axis=1)
         lext_data_corr = lext_data_corr.sub(x_map, axis=0)
 
-        # print(lext_data_corr[(lext_data_corr.mean(axis=1) > self.max_lower)].std().mean())
-
         mean_x_corr = lext_data_corr.mean(axis=1)
-        # mean_y_corr = lext_data_corr.mean(axis=0)
 
         fig = plt.figure()
         ax = fig.add_subplot(1, 1, 1)
@@ -105,10 +104,27 @@ class Data:
 
         return height, width
 
-    def measure_chunks(self):
-        chunk_size = int(self.lext_data.shape[1] / 10)
-        chunks_heights = []
-        chunks_widths = []
+    def measure_chunks(self, check_save):
+        # Slicing the dataframe into 9 pieces and measuring the trenches of the individual slices
+        right_corner_overall = (self.mean.loc[self.mean.idxmin():] > (self.max_avg * self.corner_level)).idxmax()
+        left_corner_overall = (
+                self.mean.iloc[::-1].loc[self.mean.idxmin():] > (self.max_avg * self.corner_level)).idxmax()
+
+        fig = plt.figure()
+        ax = fig.add_subplot(1, 1, 1)
+        sns.lineplot(x=self.lext_data.index, y=self.mean, ax=ax)
+        plt.axhline(y=self.mean.min(), color='red', alpha=0.5)
+        plt.axhline(y=self.max_avg, color='red', alpha=0.5)
+        plt.axvline(x=right_corner_overall, color='red', alpha=0.5)
+        plt.axvline(x=left_corner_overall, color='red', alpha=0.5)
+        if check_save:
+            plt.savefig(self.file_name)
+
+        plt.show()
+        self.height = (self.max_avg * self.corner_level) - self.mean.min()
+        self.width = right_corner_overall - left_corner_overall
+
+        chunk_size = int(self.lext_data.shape[1] / 9)
 
         for start in range(0, self.lext_data.shape[1], chunk_size):
             lext_data_subset = self.lext_data.iloc[:, start:start + chunk_size]
@@ -123,9 +139,11 @@ class Data:
             left_corner = (mean.iloc[::-1].loc[mean.idxmin():] > (max_avg * self.corner_level)).idxmax()
             height = (max_avg * self.corner_level) - mean.min()
             width = right_corner - left_corner
-            chunks_heights.append(height)
-            chunks_widths.append(width)
+            self.chunks_heights.append(height)
+            self.chunks_widths.append(width)
 
+
+'''
             fig = plt.figure()
             ax = fig.add_subplot(1, 1, 1)
             sns.lineplot(x=lext_data_subset.index, y=mean, ax=ax)
@@ -134,5 +152,4 @@ class Data:
             plt.axvline(x=right_corner, color='red', alpha=0.5)
             plt.axvline(x=left_corner, color='red', alpha=0.5)
             plt.show()
-
-        return chunks_heights, chunks_widths
+'''
