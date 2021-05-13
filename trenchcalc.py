@@ -104,3 +104,35 @@ class Data:
         width = right_corner - left_corner
 
         return height, width
+
+    def measure_chunks(self):
+        chunk_size = int(self.lext_data.shape[1] / 10)
+        chunks_heights = []
+        chunks_widths = []
+
+        for start in range(0, self.lext_data.shape[1], chunk_size):
+            lext_data_subset = self.lext_data.iloc[:, start:start + chunk_size]
+            mean = lext_data_subset.mean(axis=1)
+            max_upper = lext_data_subset.to_numpy().max()
+            min_lower = lext_data_subset.to_numpy().min()
+            abs_range = max_upper - min_lower
+            max_lower = max_upper - (abs_range / self.avg_level)
+            max_avg = lext_data_subset[(mean > max_lower)].mean().mean()
+
+            right_corner = (mean.loc[mean.idxmin():] > (max_avg * self.corner_level)).idxmax()
+            left_corner = (mean.iloc[::-1].loc[mean.idxmin():] > (max_avg * self.corner_level)).idxmax()
+            height = (max_avg * self.corner_level) - mean.min()
+            width = right_corner - left_corner
+            chunks_heights.append(height)
+            chunks_widths.append(width)
+
+            fig = plt.figure()
+            ax = fig.add_subplot(1, 1, 1)
+            sns.lineplot(x=lext_data_subset.index, y=mean, ax=ax)
+            plt.axhline(y=mean.min(), color='red', alpha=0.5)
+            plt.axhline(y=max_avg, color='red', alpha=0.5)
+            plt.axvline(x=right_corner, color='red', alpha=0.5)
+            plt.axvline(x=left_corner, color='red', alpha=0.5)
+            plt.show()
+
+        return chunks_heights, chunks_widths
