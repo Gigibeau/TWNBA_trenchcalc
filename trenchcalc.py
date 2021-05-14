@@ -3,6 +3,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from matplotlib import cm
+import scipy
+from scipy import stats
+import statistics
 
 
 class Data:
@@ -32,7 +35,7 @@ class Data:
         self.max_avg = self.lext_data[(self.mean > self.max_lower)].mean().mean()
 
         # Defining the confidence and std
-        self.degrees_freedom = len(self.lext_data.columns) - 1
+        self.degrees_freedom = 9
 
         # Defining output data
         self.height = 0
@@ -145,14 +148,18 @@ class Data:
             self.chunks_heights.append(height)
             self.chunks_widths.append(width)
 
+        self.chunks_heights_mean = np.mean(self.chunks_heights)
+        self.chunks_widths_mean = np.mean(self.chunks_widths)
+        self.heights_std_err = scipy.stats.sem(self.chunks_heights)
+        self.widths_std_err = scipy.stats.sem(self.chunks_widths)
+        self.heights_std = statistics.stdev(self.chunks_heights)
+        self.widths_std = statistics.stdev(self.chunks_widths)
+        self.conf_upper_heights = scipy.stats.t.interval(self.confidence_level, self.degrees_freedom,
+                                                         self.chunks_heights_mean, self.heights_std_err)[0]
+        self.conf_lower_heights = scipy.stats.t.interval(self.confidence_level, self.degrees_freedom,
+                                                         self.chunks_heights_mean, self.heights_std_err)[1]
+        self.conf_upper_widths = scipy.stats.t.interval(self.confidence_level, self.degrees_freedom,
+                                                        self.chunks_widths_mean, self.widths_std_err)[0]
+        self.conf_lower_widths = scipy.stats.t.interval(self.confidence_level, self.degrees_freedom,
+                                                        self.chunks_widths_mean, self.widths_std_err)[1]
 
-'''
-            fig = plt.figure()
-            ax = fig.add_subplot(1, 1, 1)
-            sns.lineplot(x=lext_data_subset.index, y=mean, ax=ax)
-            plt.axhline(y=mean.min(), color='red', alpha=0.5)
-            plt.axhline(y=max_avg, color='red', alpha=0.5)
-            plt.axvline(x=right_corner, color='red', alpha=0.5)
-            plt.axvline(x=left_corner, color='red', alpha=0.5)
-            plt.show()
-'''
