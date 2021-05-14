@@ -6,7 +6,7 @@ from matplotlib import cm
 
 
 class Data:
-    def __init__(self, file_name, avg_level, corner_level):
+    def __init__(self, file_name, avg_level, confidence_level):
         # Loading in the csv file and cleaning it up
         self.file_name = file_name.split('.')[0]
         self.lext_data = pd.read_csv(file_name, error_bad_lines=False, skiprows=18)
@@ -26,10 +26,13 @@ class Data:
         self.min_lower = self.lext_data.to_numpy().min()
         self.abs_range = self.max_upper - self.min_lower
         self.avg_level = avg_level
-        self.corner_level = corner_level
+        self.confidence_level = confidence_level
         self.max_lower = self.max_upper - (self.abs_range / self.avg_level)
         self.min_upper = self.min_lower + (self.abs_range / self.avg_level)
         self.max_avg = self.lext_data[(self.mean > self.max_lower)].mean().mean()
+
+        # Defining the confidence and std
+        self.degrees_freedom = len(self.lext_data.columns) - 1
 
         # Defining output data
         self.height = 0
@@ -87,8 +90,8 @@ class Data:
 
     def measure(self):
         # Measuring the trench
-        right_corner = (self.mean.loc[self.mean.idxmin():] > (self.max_avg * self.corner_level)).idxmax()
-        left_corner = (self.mean.iloc[::-1].loc[self.mean.idxmin():] > (self.max_avg * self.corner_level)).idxmax()
+        right_corner = (self.mean.loc[self.mean.idxmin():] > (self.max_avg * self.confidence_level)).idxmax()
+        left_corner = (self.mean.iloc[::-1].loc[self.mean.idxmin():] > (self.max_avg * self.confidence_level)).idxmax()
 
         fig = plt.figure()
         ax = fig.add_subplot(1, 1, 1)
@@ -99,16 +102,16 @@ class Data:
         plt.axvline(x=left_corner, color='red', alpha=0.5)
         plt.savefig(self.file_name)
         plt.show()
-        height = (self.max_avg * self.corner_level) - self.mean.min()
+        height = (self.max_avg * self.confidence_level) - self.mean.min()
         width = right_corner - left_corner
 
         return height, width
 
     def measure_chunks(self, check_save):
         # Slicing the dataframe into 9 pieces and measuring the trenches of the individual slices
-        right_corner_overall = (self.mean.loc[self.mean.idxmin():] > (self.max_avg * self.corner_level)).idxmax()
+        right_corner_overall = (self.mean.loc[self.mean.idxmin():] > (self.max_avg * self.confidence_level)).idxmax()
         left_corner_overall = (
-                self.mean.iloc[::-1].loc[self.mean.idxmin():] > (self.max_avg * self.corner_level)).idxmax()
+                self.mean.iloc[::-1].loc[self.mean.idxmin():] > (self.max_avg * self.confidence_level)).idxmax()
 
         fig = plt.figure()
         ax = fig.add_subplot(1, 1, 1)
@@ -121,7 +124,7 @@ class Data:
             plt.savefig(self.file_name)
 
         plt.show()
-        self.height = (self.max_avg * self.corner_level) - self.mean.min()
+        self.height = (self.max_avg * self.confidence_level) - self.mean.min()
         self.width = right_corner_overall - left_corner_overall
 
         chunk_size = int(self.lext_data.shape[1] / 9)
@@ -135,9 +138,9 @@ class Data:
             max_lower = max_upper - (abs_range / self.avg_level)
             max_avg = lext_data_subset[(mean > max_lower)].mean().mean()
 
-            right_corner = (mean.loc[mean.idxmin():] > (max_avg * self.corner_level)).idxmax()
-            left_corner = (mean.iloc[::-1].loc[mean.idxmin():] > (max_avg * self.corner_level)).idxmax()
-            height = (max_avg * self.corner_level) - mean.min()
+            right_corner = (mean.loc[mean.idxmin():] > (max_avg * self.confidence_level)).idxmax()
+            left_corner = (mean.iloc[::-1].loc[mean.idxmin():] > (max_avg * self.confidence_level)).idxmax()
+            height = (max_avg * self.confidence_level) - mean.min()
             width = right_corner - left_corner
             self.chunks_heights.append(height)
             self.chunks_widths.append(width)
