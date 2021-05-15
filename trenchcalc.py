@@ -20,7 +20,17 @@ class Data:
         for column in self.lext_data.columns:
             self.lext_data.rename(columns={column: int(column.split('= ')[1])}, inplace=True)
         for column in self.lext_data.columns:
-            self.lext_data.rename(columns={column: self.resolution[column - 1]}, inplace=True)
+            self.lext_data.rename(columns={column: self.resolution[column]}, inplace=True)
+
+        # Correcting spikes in the dataframe resulting from artifacts of the measurement
+        self.mean = self.lext_data.mean(axis=1)
+        self.mean_abs = self.lext_data.stack().mean()
+        self.upper = self.mean[self.mean > self.mean_abs]
+        self.upper_std = self.upper.std()
+        self.upper_mean = self.upper.mean()
+        #self.lower = self.mean[self.mean < self.mean_abs]
+        #self.lower_std = self.lower.std()
+        self.lext_data[self.lext_data > (self.upper_mean + 3 * self.upper_std)] = self.upper_mean + 3 * self.upper_std
 
         self.mean = self.lext_data.mean(axis=1)
 
@@ -87,7 +97,7 @@ class Data:
         fig = plt.figure()
         ax = fig.add_subplot(1, 1, 1, projection='3d')
         ax.plot_surface(x, y, z, cmap=cm.viridis, rstride=5, cstride=5, linewidth=0)
-        ax.azim = 90
+        ax.azim = 20
         plt.savefig(self.file_name + '_3D')
         plt.show()
 
@@ -130,7 +140,7 @@ class Data:
         self.height = (self.max_avg * self.confidence_level) - self.mean.min()
         self.width = right_corner_overall - left_corner_overall
 
-        chunk_size = int(self.lext_data.shape[1] / 9)
+        chunk_size = int(self.lext_data.shape[1] / 16)
 
         for start in range(0, self.lext_data.shape[1], chunk_size):
             lext_data_subset = self.lext_data.iloc[:, start:start + chunk_size]
@@ -162,4 +172,3 @@ class Data:
                                                         self.chunks_widths_mean, self.widths_std_err)[0]
         self.conf_lower_widths = scipy.stats.t.interval(self.confidence_level, self.degrees_freedom,
                                                         self.chunks_widths_mean, self.widths_std_err)[1]
-

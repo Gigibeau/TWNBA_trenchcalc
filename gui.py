@@ -64,12 +64,16 @@ def open_files():
 def exec_measure(list_of_filenames, avg_level, confidence_level, x_value, check_tilt, check_3d_plot, check_save_plot):
     output = pd.DataFrame(columns=['height', 'width', 'etch_factor', 'confidence_level', 'degrees_of_freedom',
                                    'std_heights', 'std_widths', 'confidence_upper_heights', 'confidence_lower_heights',
-                                   'confidence_upper_widths', 'confidence_lower_widths', 'height_1',
-                                   'height_2', 'height_3', 'height_4', 'height_5', 'height_6', 'height_7', 'height_8',
-                                   'height_9', 'width_1', 'width_2', 'width_3', 'width_4', 'width_5', 'width_6',
-                                   'width_7', 'width_8', 'width_9', 'etch_factor_1', 'etch_factor_2', 'etch_factor_3',
-                                   'etch_factor_4', 'etch_factor_5', 'etch_factor_6', 'etch_factor_7', 'etch_factor_8',
-                                   'etch_factor_9'])
+                                   'confidence_upper_widths', 'confidence_lower_widths', 'height_1', 'height_2',
+                                   'height_3', 'height_4', 'height_5', 'height_6', 'height_7', 'height_8', 'height_9',
+                                   'height_10', 'height_11', 'height_12', 'height_13', 'height_14', 'height_15',
+                                   'height_16', 'width_1', 'width_2', 'width_3', 'width_4', 'width_5', 'width_6',
+                                   'width_7', 'width_8', 'width_9', 'width_10', 'width_11', 'width_12', 'width_13',
+                                   'width_14', 'width_15', 'width_16', 'etch_factor_1', 'etch_factor_2',
+                                   'etch_factor_3', 'etch_factor_4', 'etch_factor_5', 'etch_factor_6', 'etch_factor_7',
+                                   'etch_factor_8', 'etch_factor_9', 'etch_factor_10', 'etch_factor_11',
+                                   'etch_factor_12', 'etch_factor_13', 'etch_factor_14', 'etch_factor_15',
+                                   'etch_factor_16'])
 
     for file in list_of_filenames:
         data = Data(file, avg_level, confidence_level)
