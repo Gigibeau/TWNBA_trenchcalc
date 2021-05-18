@@ -25,7 +25,7 @@ checkbutton_print_plot.grid(row=0, column=3)
 label_avg_level = Label(root, text='avg level: ')
 label_avg_level.grid(row=1, column=0)
 entry_avg_level = Entry(root, width=3)
-entry_avg_level.insert(END, 10)
+entry_avg_level.insert(END, 5)
 entry_avg_level.grid(row=1, column=1)
 
 label_confidence_level = Label(root, text='confidence level: ')
@@ -101,7 +101,8 @@ def exec_measure(list_of_filenames, avg_level, confidence_level, x_value, check_
         output.loc[data.file_name.split('/')[-1]] = file_output
     
     output = output.T
-    output.to_csv('summary.csv')
+    output_name = filedialog.asksaveasfile(mode='w', defaultextension=".csv")
+    output.to_csv(output_name)
 
 
 root.mainloop()

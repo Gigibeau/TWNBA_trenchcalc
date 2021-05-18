@@ -35,8 +35,8 @@ class Data:
         self.mean = self.lext_data.mean(axis=1)
 
         # Defining the limits
-        self.max_upper = self.lext_data.to_numpy().max()
-        self.min_lower = self.lext_data.to_numpy().min()
+        self.max_upper = self.lext_data.values.max()
+        self.min_lower = self.lext_data.values.min()
         self.abs_range = self.max_upper - self.min_lower
         self.avg_level = avg_level
         self.confidence_level = confidence_level
@@ -137,7 +137,7 @@ class Data:
             plt.savefig(self.file_name)
 
         plt.show()
-        self.height = (self.max_avg * self.confidence_level) - self.mean.min()
+        self.height = self.max_avg - self.mean.min()
         self.width = right_corner_overall - left_corner_overall
 
         chunk_size = int(self.lext_data.shape[1] / 16)
@@ -145,18 +145,19 @@ class Data:
         for start in range(0, self.lext_data.shape[1], chunk_size):
             lext_data_subset = self.lext_data.iloc[:, start:start + chunk_size]
             mean = lext_data_subset.mean(axis=1)
-            max_upper = lext_data_subset.to_numpy().max()
-            min_lower = lext_data_subset.to_numpy().min()
+            max_upper = lext_data_subset.values.max()
+            min_lower = lext_data_subset.values.min()
             abs_range = max_upper - min_lower
             max_lower = max_upper - (abs_range / self.avg_level)
             max_avg = lext_data_subset[(mean > max_lower)].mean().mean()
 
             right_corner = (mean.loc[mean.idxmin():] > (max_avg * self.confidence_level)).idxmax()
             left_corner = (mean.iloc[::-1].loc[mean.idxmin():] > (max_avg * self.confidence_level)).idxmax()
-            height = (max_avg * self.confidence_level) - mean.min()
+            height = max_avg - mean.min()
             width = right_corner - left_corner
             self.chunks_heights.append(height)
             self.chunks_widths.append(width)
+
 
         self.chunks_heights_mean = np.mean(self.chunks_heights)
         self.chunks_widths_mean = np.mean(self.chunks_widths)
