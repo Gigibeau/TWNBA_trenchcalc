@@ -45,7 +45,7 @@ class Data:
         self.max_avg = self.lext_data[(self.mean > self.max_lower)].mean().mean()
 
         # Defining the confidence and std
-        self.degrees_freedom = 9
+        self.degrees_freedom = 15
 
         # Defining output data
         self.height = 0
@@ -173,3 +173,6 @@ class Data:
                                                         self.chunks_widths_mean, self.widths_std_err)[0]
         self.conf_lower_widths = scipy.stats.t.interval(self.confidence_level, self.degrees_freedom,
                                                         self.chunks_widths_mean, self.widths_std_err)[1]
+
+        self.conf_heights = (self.conf_lower_heights + self.conf_upper_heights) / 2
+        self.conf_widths = (self.conf_lower_widths + self.conf_upper_widths) / 2
