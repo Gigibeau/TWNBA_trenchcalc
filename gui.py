@@ -97,8 +97,9 @@ def exec_measure(list_of_filenames, avg_level, confidence_level, x_value, check_
 
         etch_factor_chunks_mean = np.mean(etch_factor_chunks)
         etch_factor_chunks_std_err = scipy.stats.sem(etch_factor_chunks)
-        conf_etch_factor_chunks = scipy.stats.t.interval(data.confidence_level, data.degrees_freedom,
-                                                         etch_factor_chunks_mean, etch_factor_chunks_std_err)[0]
+        conf_calc_etch_factor_chunks = scipy.stats.t.interval(data.confidence_level, data.degrees_freedom,
+                                                              etch_factor_chunks_mean, etch_factor_chunks_std_err)
+        conf_etch_factor_chunks = abs(conf_calc_etch_factor_chunks[0] - conf_calc_etch_factor_chunks[1]) / 2
 
         file_output = []
         file_output.extend([data.height, data.width, etch_factor, conf_etch_factor_chunks, data.confidence_level,
