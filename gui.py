@@ -2,6 +2,10 @@ from trenchcalc import Data
 from tkinter import *  # NOQA
 from tkinter import filedialog
 import pandas as pd
+import numpy as np
+import scipy
+from scipy import stats
+
 
 root = Tk()
 
@@ -62,8 +66,8 @@ def open_files():
 
 
 def exec_measure(list_of_filenames, avg_level, confidence_level, x_value, check_tilt, check_3d_plot, check_save_plot):
-    output = pd.DataFrame(columns=['height', 'width', 'etch_factor', 'confidence_level', 'degrees_of_freedom',
-                                   'std_heights', 'std_widths', 'confidence_heights',
+    output = pd.DataFrame(columns=['height', 'width', 'etch_factor', 'confidence_etch_factors', 'confidence_level',
+                                   'degrees_of_freedom', 'std_heights', 'std_widths', 'confidence_heights',
                                    'confidence_widths', 'height_1', 'height_2',
                                    'height_3', 'height_4', 'height_5', 'height_6', 'height_7', 'height_8', 'height_9',
                                    'height_10', 'height_11', 'height_12', 'height_13', 'height_14', 'height_15',
@@ -91,9 +95,14 @@ def exec_measure(list_of_filenames, avg_level, confidence_level, x_value, check_
         for count in range(len(data.chunks_heights)):
             etch_factor_chunks.append(data.chunks_heights[count] / ((data.chunks_widths[count] - x_value) / 2))
 
+        etch_factor_chunks_mean = np.mean(etch_factor_chunks)
+        etch_factor_chunks_std_err = scipy.stats.sem(etch_factor_chunks)
+        conf_etch_factor_chunks = scipy.stats.t.interval(data.confidence_level, data.degrees_freedom,
+                                                         etch_factor_chunks_mean, etch_factor_chunks_std_err)[0]
+
         file_output = []
-        file_output.extend([data.height, data.width, etch_factor, data.confidence_level, data.degrees_freedom,
-                            data.heights_std, data.widths_std, data.conf_heights,
+        file_output.extend([data.height, data.width, etch_factor, conf_etch_factor_chunks, data.confidence_level,
+                            data.degrees_freedom, data.heights_std, data.widths_std, data.conf_heights,
                             data.conf_widths])
         file_output.extend(data.chunks_heights)
         file_output.extend(data.chunks_widths)
